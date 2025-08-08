@@ -1,0 +1,83 @@
+# MIPS Age Calculator Program
+
+.data
+# Input prompts and messages
+prompt_year: .asciiz "\nEnter your birth year: "
+prompt_month: .asciiz "\nEnter your birth month (1-12): "
+prompt_day: .asciiz "\nEnter your birth day (1-31): "
+current_year: .word 2025  # Set current year
+current_month: .word 1   # Set current month (January)
+current_day: .word 9     # Set current day (9th)
+output_age: .asciiz "\nYour calculated age is: "
+error_msg: .asciiz "\nInvalid date entered. Please try again."
+
+.text
+.globl main
+
+main:
+    # Prompt for birth year
+    la $a0, prompt_year   # Load prompt
+    li $v0, 4             # Print string syscall
+    syscall
+
+    li $v0, 5             # Read integer syscall
+    syscall
+    move $t0, $v0         # Store birth year in $t0
+
+    # Prompt for birth month
+    la $a0, prompt_month
+    li $v0, 4
+    syscall
+
+    li $v0, 5
+    syscall
+    move $t1, $v0         # Store birth month in $t1
+
+    # Prompt for birth day
+    la $a0, prompt_day
+    li $v0, 4
+    syscall
+
+    li $v0, 5
+    syscall
+    move $t2, $v0         # Store birth day in $t2
+
+    # Load current date
+    la $t3, current_year  # Load address of current year
+    lw $t3, 0($t3)        # Load current year into $t3
+    la $t4, current_month # Load address of current month
+    lw $t4, 0($t4)        # Load current month into $t4
+    la $t5, current_day   # Load address of current day
+    lw $t5, 0($t5)        # Load current day into $t5
+
+    # Calculate age (year difference)
+    sub $t6, $t3, $t0     # $t6 = current year - birth year
+
+    # Adjust age if current month/day is before birth month/day
+    blt $t4, $t1, adjust_year  # If current month < birth month, adjust age
+    beq $t4, $t1, check_day    # If current month == birth month, check day
+    j display_age              # Otherwise, display age
+
+check_day:
+    blt $t5, $t2, adjust_year  # If current day < birth day, adjust age
+    j display_age
+
+adjust_year:
+    sub $t6, $t6, 1            # Decrement age by 1
+
+# Display the calculated age
+display_age:
+    la $a0, output_age         # Load output message
+    li $v0, 4                  # Print string syscall
+    syscall
+
+    move $a0, $t6              # Move age to $a0
+    li $v0, 1                  # Print integer syscall
+    syscall
+
+    j exit_program             # Exit program
+
+# Exit
+exit_program:
+    li $v0, 10                 # Terminate program syscall
+    syscall
